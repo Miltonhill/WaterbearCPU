@@ -36,7 +36,7 @@ module waterbear(
   reg[15:0] PROGMEM[0:255]; // 16 bit wide 256 memory cells
   reg[5:0] DATAMEM[0:255];  // data memory
   reg[5:0] WORKMEM[0:255];  // work memory
-  reg[5:0] R1;	 			      // accumulator
+  reg[5:0] R1;              // accumulator
   
   // cpu core registers
   reg[15:0] IR;
@@ -75,7 +75,7 @@ module waterbear(
     end
     else begin
       
-      // Control Unit sequencer
+      // Control Unit Finite state machine
       case(current)
         fetch: begin
           IR = PROGMEM[PC];
