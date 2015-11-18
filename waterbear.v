@@ -36,7 +36,7 @@ module waterbear(
   reg[15:0] PROGMEM[0:255]; // 16 bit wide 256 memory cells
   reg[5:0] DATAMEM[0:255];  // data memory
   reg[5:0] WORKMEM[0:255];  // work memory
-  reg[5:0] R1;	 			// accumulator
+  reg[5:0] R1;	 			      // accumulator
   
   // cpu core registers
   reg[15:0] IR;
@@ -49,22 +49,22 @@ module waterbear(
   reg[5:0] operand;
   
   
-  
-  // initial cpu bootstrap
+  // initial cpu boot
   initial begin
     PC = 0;
     current=fetch;
     
     // memory initialization for testbench
     //PROGMEM[n] = {reserved, op_code, numbit, operand}
-    PROGMEM[0] = {reserved, LDR, 1'b1, 6'b000010};
-    PROGMEM[1] = {reserved, STR, 1'b0, 6'b001101};
-    PROGMEM[2] = {reserved, LDR, 1'b1, 6'b000101};
-    PROGMEM[3] = {reserved, STR, 1'b0, 6'b001110};
-    PROGMEM[4] = {reserved, LDR, 1'b0, 6'b001101};
-    PROGMEM[5] = {reserved, ADD, 1'b0, 6'b001110};
-    PROGMEM[6] = {reserved, STR, 1'b0, 6'b000010};
-    PROGMEM[7] = {reserved, HLT, 1'b0, 6'b000000};
+    // Sample program calculates equation: x=5+7;
+    PROGMEM[0] = {reserved, LDR, 1'b1, 6'b000010}; //Load value 5 into R1, mcode: 00000 001 1 000010
+    PROGMEM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memory addr 13
+    PROGMEM[2] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 7 into R1
+    PROGMEM[3] = {reserved, STR, 1'b0, 6'b001110}; //Store value from R1 in memory addr 14
+    PROGMEM[4] = {reserved, LDR, 1'b0, 6'b001101}; //Load value from memory addr 13 into R1
+    PROGMEM[5] = {reserved, ADD, 1'b0, 6'b001110}; //Add value from memory addr 14 to R1
+    PROGMEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memory addr 15
+    PROGMEM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
   end
   
   // clock cycles
@@ -128,7 +128,7 @@ module waterbear(
         
         store: begin
           //DATAMEM[    =WORKMEM
-          next=4'b0000; //fetch;
+          next=fetch;
         end
         
         default: begin end
