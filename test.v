@@ -1,3 +1,8 @@
+// runtest: 
+// iverilog test.v waterbear.v -o cpusim
+// vpp cpusim
+// gtkwave &
+`timescale 1ns/10ps
 module test ();
   reg clk, rst;
   wire [7:0] pc;
@@ -10,12 +15,14 @@ module test ();
     $dumpvars(0, test);
   end
   
+  //always #5 clk = ~clk;
+  
   initial begin
     clk = 1;
-    rst = 1;
+    rst = 0;
     #1 rst = 0;
-    #130 rst = 0;
-    $stop;
+    #1300 rst = 0;
+    $finish;
   end
   
   always clk = #1 ~clk;
