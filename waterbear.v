@@ -7,7 +7,7 @@
  * with GTKWave
  *
  */
-
+`timescale 1ns/10ps
 module waterbear(
   input clk,
   input rst,
@@ -19,72 +19,82 @@ module waterbear(
   parameter execute=2'b10;
   parameter store=2'b11;
   
+  // index for memcopy in store step
+  integer i;
+  
   // Control Unit registers
-  reg[1:0] current;
-  reg[1:0] next;
+  reg[1:0]  control_unit_current;
+  reg[1:0]  control_unit_next;
   
   // mnemonics of opcodes
-  parameter LDR = 4'b001;
-  parameter STR = 4'b010;
-  parameter ADD = 4'b011;
-  parameter SUB = 4'b100;
-  parameter EQU = 4'b101;
-  parameter JMP = 4'b110;
-  parameter HLT = 4'b111;
+  parameter LDR = 4'b001;    // load
+  parameter STR = 4'b010;    // store
+  parameter ADD = 4'b011;    // add
+  parameter SUB = 4'b100;    // substract
+  parameter EQU = 4'b101;    // compare equal
+  parameter JMP = 4'b110;    // jump
+  parameter HLT = 4'b111;    // halt
   
   // memory structure
-  reg[15:0] PROGMEM[0:255]; // 16 bit wide 256 memory cells
-  reg[5:0] DATAMEM[0:255];  // data memory
-  reg[5:0] WORKMEM[0:255];  // work memory
-  reg[5:0] R1;              // accumulator
+  reg[15:0] RAM[0:255];      // 16 bit wide 256 memory cells
+  reg[5:0]  WORKMEM[0:127];  // ALU intermediate register
+  reg[5:0]  DESTMEM[0:127];  // destination register
+  reg[5:0]  R1;              // accumulator
+  reg[15:0] IR;              // instruction register
+  reg[7:0]  PC;              // program counter
   
-  // cpu core registers
-  reg[15:0] IR;
-  reg[7:0] PC;
-  
-  // instruction register
-  reg[4:0] reserved = 5'b00000;
-  reg[3:0] op_code;
-  reg numbit;
-  reg[5:0] operand;
+  // instruction set structure
+  reg[4:0]  reserved = 5'b00000;
+  reg[3:0]  op_code;
+  reg       numbit;
+  reg[5:0]  operand;
   
   
   // initial cpu boot
   initial begin
     PC = 0;
-    current=fetch;
+    R1=0;
+    control_unit_current=fetch;
+    
+    /*
+      RAM MEMORY
+        LAYOUT       ------5--------4--------1--------6------
+        256 CELLS    |          |        |        |         |
+        16-bit       | RESERVED | OPCODE | NUMBIT | OPERAND |
+        WIDE         |          |        |        |         |
+                     ----------------------------------------
+    */
     
     // memory initialization for testbench
-    //PROGMEM[n] = {reserved, op_code, numbit, operand}
     // Sample program calculates equation: x=5+7;
-    PROGMEM[0] = {reserved, LDR, 1'b1, 6'b000010}; //Load value 5 into R1, mcode: 00000 001 1 000010
-    PROGMEM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memory addr 13
-    PROGMEM[2] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 7 into R1
-    PROGMEM[3] = {reserved, STR, 1'b0, 6'b001110}; //Store value from R1 in memory addr 14
-    PROGMEM[4] = {reserved, LDR, 1'b0, 6'b001101}; //Load value from memory addr 13 into R1
-    PROGMEM[5] = {reserved, ADD, 1'b0, 6'b001110}; //Add value from memory addr 14 to R1
-    PROGMEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memory addr 15
-    PROGMEM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
+    RAM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1, mcode: 00000 001 1 000010
+    RAM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memory addr 13
+    RAM[2] = {reserved, LDR, 1'b1, 6'b000111}; //Load value 7 into R1
+    RAM[3] = {reserved, STR, 1'b0, 6'b001110}; //Store value from R1 in memory addr 14
+    RAM[4] = {reserved, LDR, 1'b0, 6'b001101}; //Load value from memory addr 13 into R1
+    RAM[5] = {reserved, ADD, 1'b0, 6'b001110}; //Add value from memory addr 14 to R1
+    RAM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memory addr 15
+    RAM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
   end
   
   // clock cycles
   always @ (clk, rst) begin
     if(rst) begin
-      current=fetch;
+      control_unit_current=fetch;
       PC=0;
     end
     else begin
       
       // Control Unit Finite state machine
-      case(current)
+      case(control_unit_current)
         fetch: begin
-          IR = PROGMEM[PC];
+          IR = RAM[PC];
           PC = PC +1;
-          next=decode;
+          control_unit_next=decode;
         end
         
         decode: begin
-          next=execute;
+          control_unit_next=execute;
           
           op_code= IR[10:7];
           numbit=IR[6:6];
@@ -100,12 +110,12 @@ module waterbear(
               end else begin
                 R1 = WORKMEM[operand]; // assign from address
               end
-              next=store;
+              control_unit_next=store;
             end
             
             STR: begin
               WORKMEM[operand] = R1;
-              next=store;
+              control_unit_next=store;
             end
             
             ADD: begin
@@ -114,27 +124,32 @@ module waterbear(
               end else begin
                 R1=R1+WORKMEM[operand];
               end
-              next=store;
+              control_unit_next=store;
             end
             
             HLT: begin
-              next=execute; // continue loop
+              control_unit_next=execute; // continue loop
             end
             
-            // the rest
+            
             default: begin end
           endcase
         end // end of execute
         
         store: begin
-          //DATAMEM[    =WORKMEM
-          next=fetch;
+          // Loop is synthesizable:
+          // http://www.lcdm-eng.com/papers/snug13_SNUG-SV-2013_Synthesizable-SystemVerilog_paper.pdf
+          for (i=0; i<127; i=i+1 ) begin
+            DESTMEM[i] <= WORKMEM[i];
+          end
+          
+          control_unit_next=fetch;
         end
         
         default: begin end
       endcase
       
-      current=next;
+      control_unit_current=control_unit_next;
     end
   end
 endmodule
