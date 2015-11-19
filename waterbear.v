@@ -45,16 +45,17 @@ module waterbear(
   
   // instruction set structure
   reg[4:0]  reserved = 5'b00000;
-  reg[3:0]  op_code;
-  reg       numbit;
-  reg[5:0]  operand;
+  reg[3:0]  op_code  = 0;
+  reg       numbit   = 0;
+  reg[5:0]  operand  = 0;
   
   
   // initial cpu boot
   initial begin
-    PC = 0;
-    R1=0;
-    control_unit_current=fetch;
+
+    // initialize memory and registers
+    init_regs();
+    
     
     /*
       RAM memory layout contains 256 memorycells which are 16-bit wide
@@ -82,8 +83,7 @@ module waterbear(
   // clock cycles
   always @ (clk, rst) begin
     if(rst) begin
-      control_unit_current=fetch;
-      PC=0;
+      init_regs();
     end
     else begin
       
@@ -97,7 +97,6 @@ module waterbear(
         
         decode: begin
           control_unit_next=execute;
-          
           op_code= IR[10:7];
           numbit=IR[6:6];
           operand=IR[5:0];
@@ -133,10 +132,9 @@ module waterbear(
               control_unit_next=execute; // continue loop
             end
             
-            
             default: begin end
           endcase
-        end // end of execute
+        end // end of execute ALU instructions
         
         store: begin
           // Loop is synthesizable:
@@ -154,4 +152,21 @@ module waterbear(
       control_unit_current=control_unit_next;
     end
   end
+
+  // task to initialize registers and memory
+  task init_regs;
+  begin
+    PC                   = 0;
+    R1                   = 0;
+    IR                   = 0;
+    //WORKMEM              = 0; //{0,128'h80};
+    //DESTMEM              = 0; //{0,128'h80};
+    control_unit_current = fetch;
+    numbit               = 0;
+    operand              = 0;
+    op_code              = 0;
+    reserved             = 0;
+  end
+  endtask
+
 endmodule
