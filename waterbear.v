@@ -57,12 +57,14 @@ module waterbear(
     control_unit_current=fetch;
     
     /*
-      RAM MEMORY
-        LAYOUT       ------5--------4--------1--------6------
-        256 CELLS    |          |        |        |         |
-        16-bit       | RESERVED | OPCODE | NUMBIT | OPERAND |
-        WIDE         |          |        |        |         |
-                     ----------------------------------------
+      RAM memory layout contains 256 memorycells which are 16-bit wide
+      to store instruction set.
+      
+                              ------5--------4--------1--------6------
+        INSTRUCTION SET       |          |        |        |         |
+        STRUCTURE             | RESERVED | OPCODE | NUMBIT | OPERAND |
+                              |          |        |        |         |
+                              ----------------------------------------
     */
     
     // memory initialization for testbench
