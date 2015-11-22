@@ -46,23 +46,24 @@ Seven opcodes are currently supported with mnemonics:
     parameter JMP = 4'b110;    // jump
     parameter HLT = 4'b111;    // halt
 
+    example assembly code: LDR 1 R1 is decoded to: 00000 001 1 000010
 
 When Waterbear CPU starts in simulation it executes sample program which calculates equation: x=5+7:
 
-    MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1, mcode: 00000 001 1 000010
-    MEM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memory addr 13
+    MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1
+    MEM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memaddr 13
     MEM[2] = {reserved, LDR, 1'b1, 6'b000111}; //Load value 7 into R1
-    MEM[3] = {reserved, STR, 1'b0, 6'b001110}; //Store value from R1 in memory addr 14
+    MEM[3] = {reserved, STR, 1'b0, 6'b001110}; //Store value from R1 in memaddr 14
     MEM[4] = {reserved, LDR, 1'b0, 6'b001101}; //Load value from memory addr 13 into R1
     MEM[5] = {reserved, ADD, 1'b0, 6'b001110}; //Add value from memory addr 14 to R1
-    MEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memory addr 15
+    MEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memaddr 15
     MEM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
 
 Program is stored in Main Memory. Memory contains 256 memorycells which are each 16-bit wide.
 
 Sample program Time diagram with signals:
 
-[![Timeline](https://raw.githubusercontent.com/Miltonhill/WaterbearCPU/master/tests/cpu.png)](#features)
+[![Timeline](https://raw.githubusercontent.com/Miltonhill/WaterbearCPU/master/tests/cpu.png)]
 
 
 
