@@ -14,10 +14,12 @@ module waterbear(
   output[7:0] PC);
   
   // Control Unit steps
-  parameter fetch=2'b00;
-  parameter decode=2'b01;
-  parameter execute=2'b10;
-  parameter store=2'b11;
+  // Classic RISC type pipeline 
+  // without MEM stage
+  parameter IF=2'b00;
+  parameter ID=2'b01;
+  parameter EX=2'b10;
+  parameter WB=2'b11;
   
   // index for memcopy in store step
   integer i;
@@ -36,12 +38,16 @@ module waterbear(
   parameter HLT = 4'b111;    // halt
   
   // memory structure
-  reg[15:0] RAM[0:255];      // 16 bit wide 256 memory cells
+  reg[15:0] MEM[0:255];      // Main Memory - 16 bit wide 256 memory cells
   reg[5:0]  WORKMEM[0:127];  // ALU intermediate register
   reg[5:0]  DESTMEM[0:127];  // destination register
   reg[5:0]  R1;              // accumulator
-  reg[15:0] IR;              // instruction register
   reg[7:0]  PC;              // program counter
+  
+  reg[7:0]  MAR;             // Memory Address register
+  reg[15:0] MDR;             // Memory Data/Buffer Register
+  reg[15:0] CIR;             // Current Instruction Register
+  
   
   // instruction set structure
   reg[4:0]  reserved = 5'b00000;
@@ -70,14 +76,14 @@ module waterbear(
     
     // memory initialization for testbench
     // Sample program calculates equation: x=5+7;
-    RAM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1, mcode: 00000 001 1 000010
-    RAM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memory addr 13
-    RAM[2] = {reserved, LDR, 1'b1, 6'b000111}; //Load value 7 into R1
-    RAM[3] = {reserved, STR, 1'b0, 6'b001110}; //Store value from R1 in memory addr 14
-    RAM[4] = {reserved, LDR, 1'b0, 6'b001101}; //Load value from memory addr 13 into R1
-    RAM[5] = {reserved, ADD, 1'b0, 6'b001110}; //Add value from memory addr 14 to R1
-    RAM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memory addr 15
-    RAM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
+    MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1, mcode: 00000 001 1 000010
+    MEM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memory addr 13
+    MEM[2] = {reserved, LDR, 1'b1, 6'b000111}; //Load value 7 into R1
+    MEM[3] = {reserved, STR, 1'b0, 6'b001110}; //Store value from R1 in memory addr 14
+    MEM[4] = {reserved, LDR, 1'b0, 6'b001101}; //Load value from memory addr 13 into R1
+    MEM[5] = {reserved, ADD, 1'b0, 6'b001110}; //Add value from memory addr 14 to R1
+    MEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memory addr 15
+    MEM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
   end
   
   // clock cycles
@@ -89,20 +95,20 @@ module waterbear(
       
       // Control Unit Finite state machine
       case(control_unit_current)
-        fetch: begin
-          IR = RAM[PC];
+        IF: begin
+          MAR = PC;
           PC = PC +1;
-          control_unit_next=decode;
+          MDR = MEM[MAR];
+          CIR = MDR;
+          control_unit_next=ID;
         end
         
-        decode: begin
-          control_unit_next=execute;
-          op_code= IR[10:7];
-          numbit=IR[6:6];
-          operand=IR[5:0];
+        ID: begin
+          control_unit_next=EX;
+          InstructionDecoder(CIR, op_code, numbit, operand);
         end
         
-        execute: begin
+        EX: begin
           // execute ALU instructions
           case(op_code)
             LDR: begin
@@ -111,12 +117,12 @@ module waterbear(
               end else begin
                 R1 = WORKMEM[operand]; // assign from address
               end
-              control_unit_next=store;
+              control_unit_next=WB;
             end
             
             STR: begin
               WORKMEM[operand] = R1;
-              control_unit_next=store;
+              control_unit_next=WB;
             end
             
             ADD: begin
@@ -125,25 +131,25 @@ module waterbear(
               end else begin
                 R1=R1+WORKMEM[operand];
               end
-              control_unit_next=store;
+              control_unit_next=WB;
             end
             
             HLT: begin
-              control_unit_next=execute; // continue loop
+              control_unit_next=EX; // continue loop
             end
             
             default: begin end
           endcase
         end // end of execute ALU instructions
         
-        store: begin
+        WB: begin
           // Loop is synthesizable:
           // http://www.lcdm-eng.com/papers/snug13_SNUG-SV-2013_Synthesizable-SystemVerilog_paper.pdf
           for (i=0; i<127; i=i+1 ) begin
             DESTMEM[i] <= WORKMEM[i];
           end
           
-          control_unit_next=fetch;
+          control_unit_next=IF;
         end
         
         default: begin end
@@ -156,17 +162,46 @@ module waterbear(
   // task to initialize registers and memory
   task init_regs;
   begin
-    PC                   = 0;
-    R1                   = 0;
-    IR                   = 0;
-    //WORKMEM              = 0; //{0,128'h80};
-    //DESTMEM              = 0; //{0,128'h80};
-    control_unit_current = fetch;
-    numbit               = 0;
-    operand              = 0;
-    op_code              = 0;
-    reserved             = 0;
+    PC                    = 0;
+    R1                    = 0;
+    MDR                   = 0;
+    MAR                   = 0;
+    CIR                   = 0;
+    //WORKMEM             = 0; //{0,128'h80};
+    //DESTMEM             = 0; //{0,128'h80};
+    control_unit_current  = IF;
+    numbit                = 0;
+    operand               = 0;
+    op_code               = 0;
+    reserved              = 0;
   end
   endtask
 
+  // in execute, Control Unit
+  task InstructionDecoder;
+    input[15:0] CIR;
+    output[3:0] op_code;
+    output numbit;
+    output[5:0] operand;
+    begin
+      op_code= CIR[10:7];
+      numbit=CIR[6:6];
+      operand=CIR[5:0];
+    end
+  endtask
+    
+endmodule
+
+
+// For the test 4 core test
+module multicore(
+  input clk,
+  input rst,
+  output[7:0] PC);
+  
+  waterbear core1(clk, reset, PC);
+  waterbear core2(clk, reset, PC);
+  waterbear core3(clk, reset, PC);
+  waterbear core4(clk, reset, PC);
+  
 endmodule

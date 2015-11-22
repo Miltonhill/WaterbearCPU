@@ -6,8 +6,8 @@
 module test ();
   reg clk, rst;
   wire [7:0] pc;
-  waterbear mycpu (
-   	clk, reset, pc
+  waterbear cores (
+    clk, reset, pc
   );
   
   initial begin
