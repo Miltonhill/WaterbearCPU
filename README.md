@@ -23,7 +23,10 @@ Pipeline is not complete but Waterbear perform one stage on each clock cycle. St
     parameter ID=2'b01;  // Instruction DECODE
     parameter EX=2'b10;  // Execute in ALU
     parameter WB=2'b11;  // Writeback to memory
-  
+
+<img src="http://blog.shamess.info/wp-content/uploads/2008/12/fetch-execute-cycle.png" width=250px</img>  
+
+
   
 
 Waterbear uses custom made Instruction set:
@@ -59,11 +62,13 @@ When Waterbear CPU starts in simulation it executes sample program which calcula
     MEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memaddr 15
     MEM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
 
-Program is stored in Main Memory. Memory contains 256 memorycells which are each 16-bit wide.
+    Program is stored in Main Memory. Memory contains 256 memorycells which are each 16-bit wide.
 
 Sample program Time diagram with signals:
 
 ![Timeline](https://raw.githubusercontent.com/Miltonhill/WaterbearCPU/master/tests/cpu.png)
+
+At diagram can be seen that R1 register final value is 0xC which is output of sample program x=5+7.
 
 
 
