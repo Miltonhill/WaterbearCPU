@@ -63,7 +63,7 @@ Program is stored in Main Memory. Memory contains 256 memorycells which are each
 
 Sample program Time diagram with signals:
 
-[![Timeline](https://raw.githubusercontent.com/Miltonhill/WaterbearCPU/master/tests/cpu.png)]
+![Timeline](https://raw.githubusercontent.com/Miltonhill/WaterbearCPU/master/tests/cpu.png)
 
 
 
