@@ -62,7 +62,8 @@ When Waterbear CPU starts in simulation it executes sample program which calcula
     MEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memaddr 15
     MEM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
 
-    Program is stored in Main Memory. Memory contains 256 memorycells which are each 16-bit wide.
+    Program is stored in Main Memory. Memory contains 256 memorycells 
+    which are each 16-bit wide.
 
 Sample program Time diagram with signals:
 
