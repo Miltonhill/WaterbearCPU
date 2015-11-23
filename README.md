@@ -54,6 +54,7 @@ Seven opcodes are currently supported with mnemonics:
 
 When Waterbear CPU starts in simulation it executes sample program which calculates equation: x=5+7:
 
+    testcode in CPU:
     MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1
     MEM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memaddr 13
     MEM[2] = {reserved, LDR, 1'b1, 6'b000111}; //Load value 7 into R1
@@ -63,6 +64,20 @@ When Waterbear CPU starts in simulation it executes sample program which calcula
     MEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memaddr 15
     MEM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
 
+    identical assembly:
+    LDR #5
+    STR 13
+    LDR #7
+    STR 14
+    LDR 13
+    ADD 14
+    STR 15
+    HTL
+    
+    <i>(#5 is direct value assign)</i>
+    <i>(5 is address assign)</i>
+    
+    
     Program is stored in Main Memory. Memory contains 256 memorycells 
     which are each 16-bit wide.
 
@@ -74,6 +89,7 @@ At diagram can be seen that R1 register final value is 0xC which is output of sa
 
 Another example of program is simple counter which counts from 0 to 5 and stops:
 
+    testcode in CPU:
     MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //set count value to 5
     MEM[1] = {reserved, STR, 1'b0, 6'b001111}; //store count value in memory location 15
     MEM[2] = {reserved, LDR, 1'b1, 6'b000000}; //initialize count to zero
@@ -83,8 +99,23 @@ Another example of program is simple counter which counts from 0 to 5 and stops:
     MEM[6] = {reserved, ADD, 1'b1, 6'b000001}; //increment counter in accumulator
     MEM[7] = {reserved, JMP, 1'b1, 6'b000011}; //set PC to 3
 
+    identical assembly:
+    LDR #5
+    STR 15
+    LDR #0
+    EQU 15
+    JMP #6
+    HLT
+    ADD #1
+    JMP #3
+    
+    <i>(#5 is direct value assign)</i>
+    <i>(5 is address assign)</i>
+    
 Counting program Time diagram with signals:
 
 ![Timeline](https://raw.githubusercontent.com/Miltonhill/WaterbearCPU/master/tests/cpu2.png)
+
+R1 register value is increasing by one from 0 to 5.
 
 
