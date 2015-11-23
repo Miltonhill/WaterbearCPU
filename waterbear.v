@@ -76,7 +76,7 @@ module waterbear(
     
     // memory initialization for testbench
     // Sample program calculates equation: x=5+7;
-    MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1, mcode: 00000 001 1 000010
+    /*MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1, mcode: 00000 001 1 000010
     MEM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memory addr 13
     MEM[2] = {reserved, LDR, 1'b1, 6'b000111}; //Load value 7 into R1
     MEM[3] = {reserved, STR, 1'b0, 6'b001110}; //Store value from R1 in memory addr 14
@@ -84,6 +84,15 @@ module waterbear(
     MEM[5] = {reserved, ADD, 1'b0, 6'b001110}; //Add value from memory addr 14 to R1
     MEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memory addr 15
     MEM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
+    */
+    MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //set count value to 5
+    MEM[1] = {reserved, STR, 1'b0, 6'b001111}; //store count value to address 15
+    MEM[2] = {reserved, LDR, 1'b1, 6'b000000}; //initialize count to zero
+    MEM[3] = {reserved, EQU, 1'b0, 6'b001111}; //check if count is complete, if yes skip next
+    MEM[4] = {reserved, JMP, 1'b1, 6'b000110}; //set PC to 6
+    MEM[5] = {reserved, HLT, 1'b0, 6'b000000}; //stop program
+    MEM[6] = {reserved, ADD, 1'b1, 6'b000001}; //increment counter in accumulator
+    MEM[7] = {reserved, JMP, 1'b1, 6'b000011}; //set PC to 3
   end
   
   // clock cycles
@@ -134,6 +143,18 @@ module waterbear(
               control_unit_next=WB;
             end
             
+            JMP : begin
+              PC=operand;
+              control_unit_next=WB;
+            end
+            
+            EQU: begin
+              if(R1 == WORKMEM[operand]) begin
+                PC=PC+1;
+              end
+              control_unit_next=WB;
+            end
+                
             HLT: begin
               control_unit_next=EX; // continue loop
             end
