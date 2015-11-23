@@ -49,7 +49,8 @@ Seven opcodes are currently supported with mnemonics:
     parameter JMP = 4'b110;    // jump
     parameter HLT = 4'b111;    // halt
 
-    example assembly code: LDR 1 R1 is decoded to: 00000 001 1 000010
+    Example assembly code: LDR 1 5 loads valur 5 into register
+    and it is decoded to: 00000 001 1 000010
 
 When Waterbear CPU starts in simulation it executes sample program which calculates equation: x=5+7:
 
