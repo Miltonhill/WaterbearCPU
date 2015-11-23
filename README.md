@@ -72,16 +72,19 @@ Sample program Time diagram with signals:
 
 At diagram can be seen that R1 register final value is 0xC which is output of sample program x=5+7.
 
-Another example of program is simple counter which counts from 0 to 15 and stops:
+Another example of program is simple counter which counts from 0 to 5 and stops:
 
     MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //set count value to 5
     MEM[1] = {reserved, STR, 1'b0, 6'b001111}; //store count value in memory location 15
     MEM[2] = {reserved, LDR, 1'b1, 6'b000000}; //initialize count to zero
-    MEM[3] = {reserved, EQU, 0'b0, 6'b001111}; //check if count is complete, if yes skip next
+    MEM[3] = {reserved, EQU, 1'b0, 6'b001111}; //check if count is complete, if yes skip next
     MEM[4] = {reserved, JMP, 1'b1, 6'b000110}; //set PC to 6
     MEM[5] = {reserved, HLT, 1'b0, 6'b000000}; //stop program
     MEM[6] = {reserved, ADD, 1'b1, 6'b000001}; //increment counter in accumulator
     MEM[7] = {reserved, JMP, 1'b1, 6'b000011}; //set PC to 3
 
+Counting program Time diagram with signals:
+
+![Timeline](https://raw.githubusercontent.com/Miltonhill/WaterbearCPU/master/tests/cpu2.png)
 
 
