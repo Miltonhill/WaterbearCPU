@@ -1,21 +1,20 @@
 /* 
- * P. Heinonen 2015
- * FPGA CPU
+ * Simple 8-bit FPGA softcore CPU.
+ * Copyright (C) 2015 P. Heinonen.
+ * Licensed under the MIT License. For more details, read the LICENSE file.
  *
- * compiler: 
- * Icarus Verilog 0.9.7
- * with GTKWave
+ * compiler: Icarus Verilog 0.9.7
+ * Timing analysis with GTKWave
  *
  */
-`timescale 1ns/10ps
+ 
 module waterbear(
   input clk,
   input rst,
   output[7:0] PC);
   
-  // Control Unit steps
-  // Classic RISC type pipeline 
-  // without MEM stage
+  // Control Unit stages
+  // Classic RISC type pipeline without MEM stage
   parameter IF=2'b00;
   parameter ID=2'b01;
   parameter EX=2'b10;
@@ -48,35 +47,35 @@ module waterbear(
   reg[15:0] MDR;             // Memory Data/Buffer Register
   reg[15:0] CIR;             // Current Instruction Register
   
-  
   // instruction set structure
   reg[4:0]  reserved = 5'b00000;
   reg[3:0]  op_code  = 0;
   reg       numbit   = 0;
   reg[5:0]  operand  = 0;
+
+    /*
+      RAM memory layout contains 256 memorycells which are 16-bit wide
+      to store instruction set.
+      
+                              +-----5----+---4----+---1----+---6-----+
+        INSTRUCTION SET       |          |        |        |         |
+        STRUCTURE             | RESERVED | OPCODE | NUMBIT | OPERAND |
+                              |          |        |        |         |
+                              +----------+--------+--------+---------+
+    */
   
   
-  // initial cpu boot
+  // initial cpu bootup
   initial begin
 
     // initialize memory and registers
     init_regs();
     
-    
-    /*
-      RAM memory layout contains 256 memorycells which are 16-bit wide
-      to store instruction set.
-      
-                              ------5--------4--------1--------6------
-        INSTRUCTION SET       |          |        |        |         |
-        STRUCTURE             | RESERVED | OPCODE | NUMBIT | OPERAND |
-                              |          |        |        |         |
-                              ----------------------------------------
-    */
-    
     // memory initialization for testbench
+    
     // Sample program calculates equation: x=5+7;
-    /*MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1, mcode: 00000 001 1 000010
+    /*
+    MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //Load value 5 into R1, mcode: 00000 001 1 000010
     MEM[1] = {reserved, STR, 1'b0, 6'b001101}; //Store value from R1 in memory addr 13
     MEM[2] = {reserved, LDR, 1'b1, 6'b000111}; //Load value 7 into R1
     MEM[3] = {reserved, STR, 1'b0, 6'b001110}; //Store value from R1 in memory addr 14
@@ -85,6 +84,8 @@ module waterbear(
     MEM[6] = {reserved, STR, 1'b0, 6'b000010}; //Store value from R1 into memory addr 15
     MEM[7] = {reserved, HLT, 1'b0, 6'b000000}; //Stop execution
     */
+    
+    // Sample program: Counter to count from 0 to some user coded limit, here 5.
     MEM[0] = {reserved, LDR, 1'b1, 6'b000101}; //set count value to 5
     MEM[1] = {reserved, STR, 1'b0, 6'b001111}; //store count value to address 15
     MEM[2] = {reserved, LDR, 1'b1, 6'b000000}; //initialize count to zero
@@ -118,6 +119,7 @@ module waterbear(
         end
         
         EX: begin
+        
           // execute ALU instructions
           case(op_code)
             LDR: begin
