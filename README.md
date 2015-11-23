@@ -49,7 +49,7 @@ Seven opcodes are currently supported with mnemonics:
     parameter JMP = 4'b110;    // jump
     parameter HLT = 4'b111;    // halt
 
-    Example assembly code: LDR 1 5 loads valur 5 into register
+    Example assembly code: LDR #5 loads value 5 into register
     and it is decoded to: 00000 001 1 000010
 
 When Waterbear CPU starts in simulation it executes sample program which calculates equation: x=5+7:
@@ -74,8 +74,8 @@ When Waterbear CPU starts in simulation it executes sample program which calcula
     STR 15
     HTL
     
-    <i>(#5 is direct value assign)</i>
-    <i>(5 is address assign)</i>
+    (#5 is direct value assign)
+    (5 is address assign)
     
     
     Program is stored in Main Memory. Memory contains 256 memorycells 
@@ -109,8 +109,8 @@ Another example of program is simple counter which counts from 0 to 5 and stops:
     ADD #1
     JMP #3
     
-    <i>(#5 is direct value assign)</i>
-    <i>(5 is address assign)</i>
+    (#5 is direct value assign)
+    (5 is address assign)
     
 Counting program Time diagram with signals:
 
