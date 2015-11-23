@@ -1,11 +1,10 @@
 ---
 title: Waterbear
 description: Generic four stage pipeline FPGA CPU
-author: P. Heinonen
+author: PH
 tags: test, FPGA, Verilog, CPU
-colors: light yellow
 created:  2015 Nov 18
-modified: 2011 Nov 21
+modified: 2015 Nov 21
 
 ---
 
